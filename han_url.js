@@ -28,15 +28,24 @@ for (let filename of f.file_paths.keys()) {
 /**
  * Load data from the persistent data dir.
  * 
- * @returns {Promise} Resolves `undefined` when all data is loaded.
+ * @param {(Array|String)} files Optional list of file names to load.
+ * 
+ * @returns {Promise} Resolves `undefined` when all data is loaded, or rejects when some
+ * data fails.
  */
 function load_data(files) {
+	// convert undefined to all
 	if (files == undefined) {
 		console.log(`info load all data files`)
 		files = f.file_paths.keys()
 	}
 	
-	return new Promise(function(resolve) {
+	// convert single value to array
+	if (typeof files == 'string' || files instanceof String) {
+		files = [files]
+	}
+	
+	return new Promise(function(resolve, reject) {
 		let promises = []
 	
 		for (let file of files) {
@@ -68,21 +77,23 @@ function load_data(files) {
 								}`
 							)
 						
-							reject()
+							reject(file)
 						}
 					}))
 				}
 				else {
 					console.log(`warning ignoring unsupported format file ${file}`)
+					promises.push(Promise.reject(file))
 				}
 			}
 			else {
 				console.log(`warning ignoring unknown data file ${file}`)
+				promises.push(Promise.reject(file))
 			}
 		}
 		
 		Promise.all(promises)
-		.finally(resolve)
+		.then(resolve,reject)
 	})
 }
 exports.load_data = load_data
@@ -227,6 +238,7 @@ exports.convert_han_path = convert_han_path
  * Generate latin phonetic spelling from hangeul 한글 string.
  * 
  * Note this won't work for unicodes larger than 4 bytes.
+ * Derived from [github.com/kawoou/jquery-korean-pron](https://github.com/kawoou/jquery-korean-pron).
  */
 function han_to_latin(han) {
 	let out = ''
@@ -263,14 +275,18 @@ function han_to_latin(han) {
 	.replace(/D([aeoiuywdn])/g, 'd$1')
 	// convert end ㄷ<consonant> to t
 	.replace(/D/g, 't')
-	// convert ㄹㄹ to ll
-	.replace(/(L[rl]|rr)/g, 'll')
-	// convert end ㄹ<vowel> to r
-	.replace(/L([aeoiuyw])/g, 'r$1')
-	// leave end ㄹ<consonant> as l
+	// convert <vowel>ㄹ<vowel> to r
+	.replace(/(?<=[aeoiuyw])L(?=[aeoiuyw])/g, 'r')
+	// convert remaining ㄹ to l
 	.replace(/L/g, 'l')
 	// alias ㅝ as wo
 	.replace(/weo/g, 'wo')
+	// convert <vowel|ㅅ>ㅅ<vowel|ㅅ> to s
+	.replace(/S(?=[aeoiuywsS])/g, 's')
+	// convert <vowel|ㅈ>ㅈ<vowel|ㅈ> to j
+	.replace(/J(?=[aeoiuywjJ])/g, 'j')
+	// convert remaining ㅅ,ㅈ,ㅆ<consonant> to t
+	.replace(/[SJ]|(?:([sS][sS])([^aeoiuyw]))/g, 't$2')
 	// convert 시 to shi and 씨 to sshi
 	.replace(/si/g, 'shi')
 }

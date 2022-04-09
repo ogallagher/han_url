@@ -1,6 +1,6 @@
 {
   "name": "hanurl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Convert 한글 urls using phonetic latin/ascii characters.",
   "main": "han_url.js",
   "scripts": {
