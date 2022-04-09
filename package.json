@@ -1,0 +1,30 @@
+{
+  "name": "hanurl",
+  "version": "0.1.0",
+  "description": "Convert 한글 urls using phonetic latin/ascii characters.",
+  "main": "han_url.js",
+  "scripts": {
+    "test": "mocha test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogallagher/han_url.git"
+  },
+  "keywords": [
+    "hangul",
+    "korean",
+    "url",
+    "convert",
+    "ascii",
+    "latin"
+  ],
+  "author": "갈라거 오엔, Owen Gallagher <github.com/ogallagher>",
+  "license": "SEE LICENSE IN license.txt",
+  "bugs": {
+    "url": "https://github.com/ogallagher/han_url/issues"
+  },
+  "homepage": "https://github.com/ogallagher/han_url#readme",
+  "devDependencies": {
+    "mocha": "^9.2.2"
+  }
+}
