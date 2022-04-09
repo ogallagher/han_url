@@ -3,29 +3,35 @@
  */
 
 const assert = require('assert')
+const path = require('path')
+const fs = require('fs')
 
 const hanurl = require('./han_url.js')
+const f = require('./const/filesystem.js')
 const pkg = require('./package.json')
 
 describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 	const data_size = 5
 	
+	before(function() {
+		// load all
+		return hanurl.load_data()
+		.then(() => {
+			console.log(`debug hanurl.data:\n${JSON.stringify(hanurl.data, undefined, 2)}`)
+		})
+	})
+	
 	describe('load_data', function() {
 		it('loads all and any files from data dir', function() {
-			// load all
-			return hanurl.load_data()
-			.then(() => {
-				console.log(`debug hanurl.data:\n${JSON.stringify(hanurl.data, undefined, 2)}`)
-				
-				assert.equal(
-					hanurl.data.size, 
-					data_size, 
-					`hanurl.data size ${hanurl.data.size} != ${data_size}`
-				)
-				
-				assert.ok(hanurl.data.has('domain.json'))
-				assert.ok(hanurl.data.get('domain.json').has('위키백과'))
-			})
+			// check load
+			assert.equal(
+				hanurl.data.size, 
+				data_size, 
+				`hanurl.data size ${hanurl.data.size} != ${data_size}`
+			)
+			
+			assert.ok(hanurl.data.has('domain.json'))
+			assert.ok(hanurl.data.get('domain.json').has('위키백과'))
 		})
 		
 		it('handles load failures', function() {
@@ -44,12 +50,77 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 	})
 	
 	describe('save_data', function() {
-		it.skip('saves all and any files to data dir', function() {
+		it('saves all and any files to data dir', function() {
+			// register test data file
+			const test_file = 'test.json'
+			const test_path = path.resolve(f.data_path, test_file)
 			
+			f.file_paths.set(test_file, test_path)
+			hanurl.data.set(test_file, new Map())
+			
+			return new Promise(function(res) {
+				// delete if exists
+				fs.exists(test_path, function(exists) {
+					if (exists) {
+						console.log(`info delete existing test data file ${test_path}`)
+					}
+					else {
+						console.log(`debug test data file not yet found`)
+					}
+					
+					res()
+				})
+			})
+			.then(() => {
+				return new Promise(function(res, rej) {
+					// create test data
+					const test_data = hanurl.data.get(test_file)
+					test_data.set('key-boolean', true)
+					test_data.set('key-number', 1)
+					test_data.set('key-string', 'value')
+				
+					// write new test data file
+					hanurl.save_data(test_file)
+				
+					// read new test data file
+					fs.readFile(test_path, function(err, data) {
+						if (err) {
+							console.log(
+								`error failed to read test file ${
+									test_path
+								} after write:\n${
+									err.stack
+								}`
+							)
+							rej(new Error(err.message))
+						}
+						else {
+							data = JSON.parse(data)
+							
+							for (let key of test_data.keys()) {
+								assert.ok(key in data, `${key} not found in test data ${data}`)
+								assert.equal(test_data.get(key), data[key])
+							}
+							
+							res()
+						}
+					})
+				})
+			})
 		})
 		
-		it.skip('handles save failures', function() {
-			
+		it('handles save failures', function() {
+			// save fake
+			return hanurl.save_data('nothing.json')
+			.then(
+				() => {
+					assert.ok(false, 'did not reject on save of fake data file')
+				},
+				(fails) => {
+					console.log(`info save fails for nothing.json: ${fails}`)
+					assert.ok(true)
+				}
+			)
 		})
 	})
 	
@@ -100,6 +171,11 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 			assert.equal(url, 'https://ko.wikipedia.org/wiki/꿈나무')
 		})
 		
-		it.skip('converts latin to han')
+		it.skip('converts latin to han', function() {
+			let url = 'ko.wikipedia.org/wiki/꿈나무'
+			let han = hanurl.convert_latin_url(url)
+			console.log(`info converted han url = ${han}`)
+			assert.equal(han, '코.위키백과.옭/위키/꿈나무')				
+		})
 	})
 })

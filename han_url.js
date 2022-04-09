@@ -63,10 +63,6 @@ function load_data(files) {
 							}
 						
 							resolve()
-						
-							console.log(
-								`debug loaded ${file} = ${map}`
-							)
 						}
 						catch (err) {
 							console.log(
@@ -101,7 +97,10 @@ exports.load_data = load_data
 /**
  * Write data to the persistent data dir.
  * 
- * @returns {Promise} Resolves `undefined` when all data is saved.
+ * @param {(Array|String)} files Optional list of file names to save.
+ * 
+ * @returns {Promise} Resolves `undefined` when all data is saved, and rejects file names for
+ * if any fail on write.
  */
 function save_data(files) {
 	if (files == undefined) {
@@ -109,25 +108,34 @@ function save_data(files) {
 		files = data.keys()
 	}
 	
-	return new Promise(function(resolve) {
+	// convert single value to array
+	if (typeof files == 'string' || files instanceof String) {
+		files = [files]
+	}
+	
+	return new Promise(function(res, rej) {
 		let promises = []
 		
-		for (let name of data.keys()) {
+		for (let name of files) {
 			promises.push(new Promise(function(res, rej) {
-				fs.writeFile(f.file_paths.get(name), data.get(name), (err) => {
-					if (err) {
-						console.log(`error failed to save ${name}\n${err.stack}`)
-						rej()
+				fs.writeFile(
+					f.file_paths.get(name), 
+					JSON.stringify(map_to_object(data.get(name)), undefined, 2), 
+					(err) => {
+						if (err) {
+							console.log(`error failed to save ${name}\n${err.stack}`)
+							rej(name)
+						}
+						else {
+							res()
+						}
 					}
-					else {
-						res()
-					}
-				})
+				)
 			}))
 		}
 		
 		Promise.all(promises)
-		.finally(resolve)
+		.then(res, rej)
 	})
 }
 exports.save_data = save_data
@@ -291,3 +299,20 @@ function han_to_latin(han) {
 	.replace(/si/g, 'shi')
 }
 exports.han_to_latin = han_to_latin
+
+/**
+ * Convert a map to a plain object.
+ * 
+ * @param {Map} map Map to convert.
+ * 
+ * @returns {Object} Corresponding object with matching keys and values.
+ */
+function map_to_object(map) {
+	let obj = {}
+	
+	for (let key of map.keys()) {
+		obj[key] = map.get(key)
+	}
+	
+	return obj
+}
