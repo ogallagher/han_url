@@ -12,6 +12,7 @@ const path = require('path')
 const x = require('./const/etc.js')
 const k = require('./const/keys.js')
 const f = require('./const/filesystem.js')
+const h = require('./const/korean.js')
 
 /**
  * Map file names to loaded contents in memory.
@@ -221,3 +222,56 @@ function convert_han_path(han) {
 	return ascii
 }
 exports.convert_han_path = convert_han_path
+
+/**
+ * Generate latin phonetic spelling from hangeul 한글 string.
+ * 
+ * Note this won't work for unicodes larger than 4 bytes.
+ */
+function han_to_latin(han) {
+	let out = ''
+	
+	let code, offset
+	let cho, jung, jong
+	for (let char of han) {
+		code = char.charCodeAt(0)
+		
+		if (h.first_code <= code && code <= h.last_code) {
+			// is hangul syllable 가 and 힣
+			offset = code - h.first_code
+            jong = offset % 28
+            jung = (offset - jong) / 28 % 21
+            cho = parseInt((offset - jong) / 28 / 21)
+            out += h.cho[cho] + h.jung[jung] + h.jong[jong]
+		}
+		else {
+			// is something else; leave unchanged
+			out += char
+		}
+	}
+	
+	return out
+	// leave end ㄱ<vowel> unchanged
+	.replace(/G([aeoiuyw])/g, 'g$1')
+	// convert end ㄱ<consonant> to k
+	.replace(/G/g, 'k')
+	// leave end ㅂ<vowel|ㅂㄴ> unchanged
+	.replace(/B([aeoiuywbn])/g, 'b$1')
+	// convert end ㅂ<consonant> to p
+	.replace(/B/g, 'p')
+	// leave end ㄷ<vowel|ㄷㄴ> unchanged
+	.replace(/D([aeoiuywdn])/g, 'd$1')
+	// convert end ㄷ<consonant> to t
+	.replace(/D/g, 't')
+	// convert ㄹㄹ to ll
+	.replace(/(L[rl]|rr)/g, 'll')
+	// convert end ㄹ<vowel> to r
+	.replace(/L([aeoiuyw])/g, 'r$1')
+	// leave end ㄹ<consonant> as l
+	.replace(/L/g, 'l')
+	// alias ㅝ as wo
+	.replace(/weo/g, 'wo')
+	// convert 시 to shi and 씨 to sshi
+	.replace(/si/g, 'shi')
+}
+exports.han_to_latin = han_to_latin
