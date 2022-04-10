@@ -30,7 +30,9 @@ exports.tld_file = 'tld.json'
  * Paths file.
  */
 exports.path_file = 'path.json'
-
+/**
+ * History file.
+ */
 exports.history_file = 'history.json'
 
 /**

@@ -1,19 +1,29 @@
 {
-	"#meta": {
-		"last_update": "2022-04-10 13:11 ET",
-		"count": 0,
-		"description": "Conversion history. This can be used as a cache to bypass the conversion process by url parts if a given url was previously generated. It can also be used for autocomplete while receiving a url string. Entries will only be full urls (not url parts)."
-	},
-
-	"han": {
-		"description": "han-latin entries with han as index"
-	},
-
-	"latin": {
-		"description": "han-latin entries with latin as index"
-	},
-
-	"when": {
-		"description": "han-latin entries with when as index"
-	}
+  "#meta": {
+    "last_update": "2022-04-10T22:57:11.291Z",
+    "description": {
+      "file": "Conversion history. This can be used as a cache to bypass the conversion process by url parts if a given url was previously generated. It can also be used for autocomplete while receiving a url string. Entries will only be full urls (not url parts).",
+      "uuid": "han-latin entries with uuid as index",
+      "han": "han-latin entries with han as index and uuid as value",
+      "latin": "han-latin entries with latin as index and uuid as value",
+      "when": "han-latin entries with when as index and uuid as value",
+    }
+  },
+  "uuid": {
+    "67fc95ad-d998-475e-acc7-3b9cb0f748ec": {
+      "uuid": "67fc95ad-d998-475e-acc7-3b9cb0f748ec",
+      "han": "https://test.hanurl.0.1.1/지금-음악은-못-들려",
+      "latin": "https://test.hanurl.0.1.1/jigeum-eumageun-mot-deullyeo",
+      "when": "2022-04-10T22:57:11.291Z"
+    }
+  },
+  "han": {
+    "https://test.hanurl.0.1.1/지금-음악은-못-들려": "67fc95ad-d998-475e-acc7-3b9cb0f748ec"
+  },
+  "latin": {
+    "https://test.hanurl.0.1.1/jigeum-eumageun-mot-deullyeo": "67fc95ad-d998-475e-acc7-3b9cb0f748ec"
+  },
+  "when": {
+    "2022-04-10T22:57:11.291Z": "67fc95ad-d998-475e-acc7-3b9cb0f748ec"
+  }
 }

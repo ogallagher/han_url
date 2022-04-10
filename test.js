@@ -10,6 +10,7 @@ const temp_logger = require('temp_js_logger')
 
 const hanurl = require('./han_url.js')
 const f = require('./const/filesystem.js')
+const k = require('./const/keys.js')
 const pkg = require('./package.json')
 
 describe(`${pkg.name} v${pkg.version} unit tests`, function() {
@@ -207,12 +208,93 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 	})
 	
 	describe('data.history', function() {
+		const test_protocol = 'https://'
+		const test_domain = `test.${pkg.name}.${pkg.version}`
+		const url_prefix = test_protocol + test_domain
+		
 		before(function() {
 			// clear test entries from history
+			let filter_out
+			let deleted_ids = []
+			function filter_entry(key_val) {
+				try {
+					if (
+						key_val[0] == k.description ||
+						!key_val[1][k.han].startsWith(url_prefix)
+					) {
+						filter_out[key_val[0]] = key_val[1]
+					}
+					else {
+						deleted_ids.push(key_val[0])
+					}
+				}
+				catch (err) {
+					console.log(
+						`error failed to filter ${key_val.join('=')}.\n${err.stack}`
+					)
+				}
+			}
+			function filter_id(key_id) {
+				if (deleted_ids.indexOf(key_id[1]) == -1) {
+					filter_out[key_id[0]] = key_id[1]
+				}
+			}
+			
+			let history = hanurl.data.get(f.history_file)
+			
+			filter_out = {}
+			Object.entries(history.get(k.uuid)).map(filter_entry)
+			history.set(k.uuid, filter_out)
+			
+			filter_out = {}
+			Object.entries(history.get(k.when)).map(filter_id)
+			history.set(k.when, filter_out)
+			
+			filter_out = {}
+			Object.entries(history.get(k.han)).map(filter_id)
+			history.set(k.han, filter_out)
+			
+			filter_out = {}
+			Object.entries(history.get(k.latin)).map(filter_id)
+			history.set(k.latin, filter_out)
 		})
 		
-		it.skip('updates for each new conversion', function() {
+		it('updates for each new conversion', function() {
+			let history = hanurl.data.get(f.history_file)
 			
+			let han1 = url_prefix + '/지금-음악은-못-들려'
+			assert.ok(
+				!(han1 in history.get(k.han)),
+				`found han url ${han1} before adding to history`
+			)
+			let latin1 = hanurl.convert_han_url(han1, true, false)
+			assert.ok(
+				han1 in history.get(k.han),
+				`${
+					han1
+				} not found in history.han:\n${
+					JSON.stringify(history.get(k.han), undefined, 2)
+				}`
+			)
+			assert.ok(
+				latin1 in history.get(k.latin),
+				`${latin1} not found in history.latin`
+			)
+			let whens = []
+			Object.values(history.get(k.uuid)).map(function(v) {
+				if (v.han == han1) whens.push(v)
+			})
+			assert.equal(
+				whens.length, 
+				1, 
+				`${
+					han1
+				} history.when search results length not 1:\n${
+					JSON.stringify(whens, undefined, 2)
+				}`
+			)
+			
+			return hanurl.save_data(f.history_file)
 		})
 	})
 })

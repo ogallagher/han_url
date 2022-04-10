@@ -8,6 +8,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const uuid = require('uuid').v4
 
 const x = require('./const/etc.js')
 const k = require('./const/keys.js')
@@ -146,22 +147,23 @@ exports.save_data = save_data
 function history_add(han, url) {
 	let h = data.get(f.history_file)
 	let when = new Date().toISOString()
+	let id = uuid()
 	
-	let entry = {
-		han: han,
-		latin: url,
-		when: when
-	}
+	let entry = {}
+	entry[k.uuid] = id
+	entry[k.han] = han
+	entry[k.latin] = url
+	entry[k.when] = when
 	
 	// add entry for each primary key
-	h.get(k.han)[han] = entry
-	h.get(k.latin)[url] = entry
-	h.get(k.when)[when] = entry
+	h.get(k.uuid)[id] = entry
+	h.get(k.han)[han] = id
+	h.get(k.latin)[url] = id
+	h.get(k.when)[when] = id
 	
 	// update meta
 	let meta = h.get(k.meta)
 	meta[k.last_update] = when
-	meta[k.count]++
 }
 
 /**
@@ -183,11 +185,13 @@ function convert_han_url(han, phonetic_if_unknown, forget) {
 	
 	// check history for existing conversion
 	// path = data.history.han[han].latin
-	let url = data.get(f.history_file).get(k.han)[han]?.[k.latin]
+	let url_id = data.get(f.history_file).get(k.han)[han]?.[k.latin]
+	let url
 	
-	if (url !== undefined) {
+	if (url_id !== undefined) {
 		// known url
-		console.log(`info recognized url ${han} --> ${url}`)
+		url = data.get(f.history_file).get(k.uuid)[url_id]?.[k.latin]
+		console.log(`info recognized url ${han} --> ${url_id}=${url}`)
 	}
 	else {
 		// new url
@@ -277,8 +281,10 @@ function convert_han_url(han, phonetic_if_unknown, forget) {
 		url = `${res_protocol || "https://"}${domain_parts.join('.')}/${path_parts.join('/')}`
 	}
 	
-	// update history
-	history_add(han, url)
+	if (!forget) {
+		// update history
+		history_add(han, url)
+	}
 	
 	return url
 }
