@@ -1,6 +1,19 @@
 {
 	"#meta": {
-		"last_updated": "2022-04-09 00:02 ET",
-		"count": 0
+		"last_update": "2022-04-10 13:11 ET",
+		"count": 0,
+		"description": "Conversion history. This can be used as a cache to bypass the conversion process by url parts if a given url was previously generated. It can also be used for autocomplete while receiving a url string. Entries will only be full urls (not url parts)."
+	},
+
+	"han": {
+		"description": "han-latin entries with han as index"
+	},
+
+	"latin": {
+		"description": "han-latin entries with latin as index"
+	},
+
+	"when": {
+		"description": "han-latin entries with when as index"
 	}
 }

@@ -26,6 +26,7 @@
   "homepage": "https://github.com/ogallagher/han_url#readme",
   "devDependencies": {
     "mocha": "^9.2.2",
+    "temp_js_logger": "^0.5.2",
     "yargs": "^17.4.0"
   }
 }

@@ -6,6 +6,8 @@ const assert = require('assert')
 const path = require('path')
 const fs = require('fs')
 
+const temp_logger = require('temp_js_logger')
+
 const hanurl = require('./han_url.js')
 const f = require('./const/filesystem.js')
 const pkg = require('./package.json')
@@ -14,8 +16,20 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 	const data_size = 5
 	
 	before(function() {
-		// load all
-		return hanurl.load_data()
+		// init logging
+		temp_logger.config({
+			level: 'debug',
+			with_timestamp: false,
+			caller_name: `${pkg.name}.test`,
+			with_lineno: true,
+			parse_level_prefix: true,
+			with_level: true,
+			with_cli_colors: true
+		})
+		
+		return temp_logger.imports_promise
+		// load all hanurl data
+		.then(hanurl.load_data)
 		.then(() => {
 			console.log(`debug hanurl.data:\n${JSON.stringify(hanurl.data, undefined, 2)}`)
 		})
@@ -163,19 +177,42 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 		})
 	})
 	
+	describe.skip('latin_to_han', function() {
+		
+	})
+	
 	describe('url conversion via maps', function() {
 		it('converts han to latin', function() {
 			let han = '코.위키백과.옭/위키/꿈나무'
-			let url = hanurl.convert_han_url(han)
+			let url = hanurl.convert_han_url(han, false, true)
 			console.log(`info converted url = ${url}`)
 			assert.equal(url, 'https://ko.wikipedia.org/wiki/꿈나무')
 		})
 		
 		it.skip('converts latin to han', function() {
 			let url = 'ko.wikipedia.org/wiki/꿈나무'
-			let han = hanurl.convert_latin_url(url)
+			let han = hanurl.convert_latin_url(url, false, true)
 			console.log(`info converted han url = ${han}`)
 			assert.equal(han, '코.위키백과.옭/위키/꿈나무')				
+		})
+	})
+	
+	describe('url conversion via phonetics', function() {
+		it('converts han to latin phonetically', function() {
+			let han = 'http://기억이.나지.않은/한링크/입니다'
+			let url = hanurl.convert_han_url(han, true, true)
+			console.log(`info converted url = ${url}`)
+			assert.equal(url, 'http://gieogi.naji.anheun/hanlingkeu/ibnida')
+		})
+	})
+	
+	describe('data.history', function() {
+		before(function() {
+			// clear test entries from history
+		})
+		
+		it.skip('updates for each new conversion', function() {
+			
 		})
 	})
 })
