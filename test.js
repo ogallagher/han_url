@@ -78,6 +78,7 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 				fs.exists(test_path, function(exists) {
 					if (exists) {
 						console.log(`info delete existing test data file ${test_path}`)
+						fs.rmSync(test_path)
 					}
 					else {
 						console.log(`debug test data file not yet found`)
@@ -96,29 +97,33 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 				
 					// write new test data file
 					hanurl.save_data(test_file)
-				
-					// read new test data file
-					fs.readFile(test_path, function(err, data) {
-						if (err) {
-							console.log(
-								`error failed to read test file ${
-									test_path
-								} after write:\n${
-									err.stack
-								}`
-							)
-							rej(new Error(err.message))
-						}
-						else {
-							data = JSON.parse(data)
-							
-							for (let key of test_data.keys()) {
-								assert.ok(key in data, `${key} not found in test data ${data}`)
-								assert.equal(test_data.get(key), data[key])
+					.catch((fails) => {
+						rej(new Error(fails))
+					})
+					.then(function() {
+						// read new test data file
+						fs.readFile(test_path, function(err, data) {
+							if (err) {
+								console.log(
+									`error failed to read test file ${
+										test_path
+									} after write:\n${
+										err.stack
+									}`
+								)
+								rej(new Error(err.message))
 							}
+							else {
+								data = JSON.parse(data)
 							
-							res()
-						}
+								for (let key of test_data.keys()) {
+									assert.ok(key in data, `${key} not found in test data ${data}`)
+									assert.equal(test_data.get(key), data[key])
+								}
+							
+								res()
+							}
+						})
 					})
 				})
 			})
@@ -136,6 +141,40 @@ describe(`${pkg.name} v${pkg.version} unit tests`, function() {
 					assert.ok(true)
 				}
 			)
+		})
+	})
+	
+	describe('init_data', function() {
+		it('creates missing dirs and files', function() {
+			let test_file = 'test.json'
+			let test_dir = 'test_data'
+			let test_path = path.resolve(test_dir, test_file)
+			
+			return new Promise(function(res) {
+				// delete if exists
+				let test_dir_path = path.dirname(test_path)
+				fs.exists(test_dir_path, function(exists) {
+					if (exists) {
+						console.log(`info delete existing test data dir ${test_dir}`)
+						fs.rmSync(test_dir_path, {recursive: true, force: true})
+					}
+					else {
+						console.log(`debug test data file not yet found`)
+					}
+				
+					res()
+				})
+			})
+			.then(function() {
+				// register test file
+				f.file_paths.set(test_file, test_path)
+				
+				// create test file
+				hanurl.init_data(test_file)
+				
+				assert.ok(fs.existsSync(test_dir))
+				assert.ok(fs.existsSync(test_path))
+			})
 		})
 	})
 	

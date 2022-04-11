@@ -1,7 +1,7 @@
 {
 	"#meta": {
 		"last_update": "2022-04-08 23:33 ET",
-		"count": 4
+    "description": "This data file, along with subdomain, tld, path, stores customizable hangul-latin url part mappings. Technically here is a many-to-many relationship between hangul and latin versions of any url part, so any value can be an array of strings, in which case the first element is prioritized."
 	},
 	"위키백과": "wikipedia",
 	"구글": "google",

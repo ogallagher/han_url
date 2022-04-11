@@ -20,7 +20,7 @@ const history = {
 }
 
 history.entry = {
-	uuid: history.uuid
+	uuid: history.uuid,
 	when: history.when,
 	han: history.han,
 	latin: history.latin

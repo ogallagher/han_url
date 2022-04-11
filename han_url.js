@@ -27,23 +27,79 @@ for (let filename of f.file_paths.keys()) {
 }
 
 /**
+ * Ensure that all expected data files exist.
+ */
+function init_data(files) {
+	// default param values
+	if (files == undefined) {
+		console.log(`info init all data files`)
+		files = [...f.file_paths.keys()]
+	}
+	// convert single value to array
+	if (typeof files == 'string' || files instanceof String) {
+		files = [files]
+	}
+	
+	let paths = files.map((name) => f.file_paths.get(name))
+	
+	for (let p of paths) {
+		if (p == undefined) {
+			console.log(`error skipping path not found for a given file to initialize`)
+		}
+		else {
+			let dir = path.dirname(p)
+		
+			if (!fs.existsSync(dir)) {
+				console.log(
+					`warning data file parent dir ${dir} not found; creating empty directory`
+				)
+				fs.mkdirSync(dir, {recursive: true})
+			}
+		
+			if (!fs.existsSync(p)) {
+				console.log(`warning data path ${p} not found; creating empty file`)
+			
+				if (p.endsWith(x.ext_json)) {
+					fs.writeFileSync(p, '{}')
+				}
+				else {
+					console.log(`warning ignoring data path ${file} of unknown filetype`)
+				}
+			}
+			else {
+				console.log(`debug data path ${p} found`)
+			}
+		}
+	}
+}
+exports.init_data = init_data
+
+/**
  * Load data from the persistent data dir.
  * 
  * @param {(Array|String)} files Optional list of file names to load.
+ * @param {Boolean} create_if_missing Whether to create directories and files if missing in
+ * a fault tolerant way. Default is `true`. If `false`, 
  * 
  * @returns {Promise} Resolves `undefined` when all data is loaded, or rejects when some
  * data fails.
  */
-function load_data(files) {
+function load_data(files, safe) {
+	// default param values
 	// convert undefined to all
 	if (files == undefined) {
 		console.log(`info load all data files`)
-		files = f.file_paths.keys()
+		files = [...f.file_paths.keys()]
 	}
-	
 	// convert single value to array
 	if (typeof files == 'string' || files instanceof String) {
 		files = [files]
+	}
+	
+	safe = (safe === undefined) ? true : safe
+	
+	if (safe) {
+		init_data(files)
 	}
 	
 	return new Promise(function(resolve, reject) {
